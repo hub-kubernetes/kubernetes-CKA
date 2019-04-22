@@ -24,4 +24,31 @@
 *  cfssl
 *  easyrsa 
 
-##  
+> Self signed certificates are useful when you want to enable SSL/TLS envryption for applications that run within your organization. These certificates are not recognized by browsers as the certificate authority is internal to your organization itself. In order to enable communication with any system outside your organization, you will have to set up MSSL/2 way SSL. 
+
+> There are multiple third party SSL certificate providers like verisign, symantec, intouch etc. Their Certificate Authority is embedded with all major browsers like chrome, IE, safari, mozilla. This enables any external user to connect to your server using a secure HTTPS connection that is recognized by the browser.  
+
+##  Components of SSL certificate 
+
+##  Certificate Authority (CA)
+
+> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
