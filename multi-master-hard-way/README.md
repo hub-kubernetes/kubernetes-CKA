@@ -6,7 +6,7 @@
 *     Master Node 2 - 2 cpu x 4 GB 
 *     Worker Node 1 - 2 cpu x 4 GB 
 *     Worker Node 2 - 2 cpu x 4 GB 
-*     kubectl Node  - 1 cpu x 2 GB 
+*     Control Node  - 1 cpu x 2 GB 
 *     LoadBalancer  - 1 cpu x 2 GB
 
 
@@ -70,7 +70,7 @@
 *   ETCD client/server certificates for authentication between each other and API server
 
 
-# Installing necessary software on kubectl node
+# Installing necessary software on Control node
 
 ##  Installing cfssl
 
@@ -93,6 +93,27 @@
 ` sudo apt-get update`
 
 ` sudo apt-get install -y kubectl`
+
+
+# Generate Kubernetes Certificates using cfssl 
+
+> As discussed above - we will be creating a chain of trust for kubernetes master and worker components by generating a series of self signed certificates. As a pre-requisute, we need a CA in order to generate certificates. 
+
+> Since kubernetes is internal to our infrastructure, we can act as a CA by issuing a root CA certificate using cfssl and use the CA certificate to sign any subsequent CSR for various components. All the required configuration files to generate the certificate are provided to you in this repository. 
+
+##  Generate root CA certificate
+
+> We will use ca-config.json and ca-csr.json as configuration file to generate the root CA private key and the corresponding public CSR. The public CSR will then be self signed bt the root CA private key to generate the root CA certificate. 
+
+` cd certs`
+
+` cfssl gencert -initca ca-csr.json | cfssljson -bare ca `
+
+> The output will be as below
+
+*   ca.pem  - root CA certificate
+*   ca-key.pem  - root CA private key
+*   ca.csr  - root CA public key which was used to create the certificate 
 
 
 
