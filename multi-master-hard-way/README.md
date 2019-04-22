@@ -10,7 +10,7 @@
 *     LoadBalancer  - 1 cpu x 2 GB
 
 
-# Install necessary software on kubectl node
+# Overview of SSL/TLS certificates
 
 ##  What are SSL certificates ?
 
@@ -70,6 +70,14 @@
 *   ETCD client/server certificates for authentication between each other and API server
 
 
+# Installing necessary software on kubectl node
+
+##  Installing cfssl
+
+` curl -s -L -o /bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64`
+` curl -s -L -o /bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64`
+` curl -s -L -o /bin/cfssl-certinfo https://pkg.cfssl.org/R1.2/cfssl-certinfo_linux-amd64`
+` chmod +x /bin/cfssl*`
 
 
 
