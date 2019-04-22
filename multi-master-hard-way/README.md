@@ -8,3 +8,6 @@
 *     Worker Node 2 - 2 cpu x 4 GB 
 *     kubectl Node  - 1 cpu x 2 GB 
 *     LoadBalancer  - 1 cpu x 2 GB
+
+
+##  
