@@ -48,15 +48,15 @@
 
 ##  Steps to generate a self signed certificate 
 
-*   Choose a toolkit of your choice (openssl / easyrsa / cfssl ) -- We will use cfssl 
-*   Generate root CA private key 
-*   Generate a root certificate and self-sign it using the CA private key 
-*   Distribute the root CA certificate on ALL the machines wants to trust you
-*   For each application/machine create a new private key 
-*   Use the private key to generate a public key (CSR)
-*   Ensure the Common Name Field (CN) is set accurately as per your IP address / service name or DNS
-*   Sign the CSR with root CA private key and root CA certificate to generate the client certificate
-*   Distribute the Client certificate to the corresponding application 
+*     Choose a toolkit of your choice (openssl / easyrsa / cfssl ) -- We will use cfssl 
+*     Generate root CA private key 
+*     Generate a root certificate and self-sign it using the CA private key 
+*     Distribute the root CA certificate on ALL the machines who wants to trust you
+*     For each application/machine create a new private key 
+*     Use the private key to generate a public key (CSR)
+*     Ensure the Common Name Field (CN) is set accurately as per your IP address / service name or DNS
+*     Sign the CSR with root CA private key and root CA certificate to generate the client certificate
+*     Distribute the Client certificate to the corresponding application 
 
 
 
