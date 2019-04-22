@@ -58,6 +58,16 @@
 *     Sign the CSR with root CA private key and root CA certificate to generate the client certificate
 *     Distribute the Client certificate to the corresponding application 
 
+##  What certificates do we need to generate for Kubernetes ?
+
+*   Client certificates for the kubelet to authenticate to the API server
+*   Server certificate for the API server endpoint
+*   Client certificates for administrators of the cluster to authenticate to the API server
+*   Client certificates for the API server to talk to the kubelets (nodes)
+*   Client certificate for the API server to talk to etcd
+*   Client certificate/kubeconfig for the controller manager to talk to the API server
+*   Client certificate/kubeconfig for the scheduler to talk to the API server
+*   ETCD client/server certificates for authentication between each other and API server
 
 
 
