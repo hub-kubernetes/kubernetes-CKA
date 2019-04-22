@@ -34,7 +34,7 @@
 
 > CA are third party trusted entities that issues a trusted SSL certificate. Trusted certificate are used to create a secure connection (https) from browser/client to a server that accepts the incoming request. When you create a self-signed certificate for your organization, YOU become the CA. 
 
-##  Private & Public key
+##  Private/Public key(CSR) & Certificate
 
 > SSL uses the concept of private/public key to authenticate, secure and manage connection between client and server. They work together to ensure TLS handshake takes place, creating a secure connection (https)
 
@@ -42,7 +42,22 @@
 
 > In contrast to private key, a public key can be distributed to multiple clients. Public Key or CSR is usually submitted to a CA like Comodo/Verisign/Entrust etc, and the CSR (formerly created by your private key) is then signed by the CA. This process generates a SSL/TLS certificate that can now be distributed to any client application. Since this certificate is signed by a trusted CA, your end users can now connect securely to your server (which contains the private key) using their browser. 
 
+> Some third party CA also takes care of generating the private/public key pair for you. This, sometimes, is a good option in case you lose your private key or your private key is compromised. The CA provider takes care of re-keying your certificate with a new private key, and the new private key is then handed over to you. 
+
 > When dealing with self signed certificate, its usually the organization that generates the root CA certificate and acts as the sole CA provider. Any subsequent CSR will be then signed by the root CA. This enables organizations to ensure TLS communication for applications which runs internal to them. 
+
+##  Steps to generate a self signed certificate 
+
+*   Choose a toolkit of your choice (openssl / easyrsa / cfssl ) -- We will use cfssl 
+*   Generate root CA private key 
+*   Generate a root certificate and self-sign it using the CA private key 
+*   Distribute the root CA certificate on ALL the machines wants to trust you
+*   For each application/machine create a new private key 
+*   Use the private key to generate a public key (CSR)
+*   Ensure the Common Name Field (CN) is set accurately as per your IP address / service name or DNS
+*   Sign the CSR with root CA private key and root CA certificate to generate the client certificate
+*   Distribute the Client certificate to the corresponding application 
+
 
 
 
