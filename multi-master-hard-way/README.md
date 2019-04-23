@@ -316,24 +316,25 @@ echo $CERT_HOSTNAME
 ##  Generating kubeconfig for each kubelet 
 
 ` cd certs`
+
 ` export KUBERNETES_ADDRESS=IP_ADDRESS_OF_LOADBALANCER`
 
 > Use kubectl command to generate kubeconfig for each kubelet. 
 
 ```
-for instance in worker1 worker2   # {{WORKER NODES}}
+for instance in worker1 worker2 
 do
-kubectl config set-cluster mycluster \  #{{cluster name}}
---certificate-authority=ca.pem \   # {{public key for CA}}
+kubectl config set-cluster mycluster \ 
+--certificate-authority=ca.pem \
 --embed-certs=true \
---server=https://${KUBERNETES_ADDRESS}:6443 \    # {{Variable from above}}
+--server=https://${KUBERNETES_ADDRESS}:6443 \ 
 --kubeconfig=${instance}.kubeconfig
 
-kubectl config set-credentials system:node:${instance} \  #{{set the username}}
---client-certificate=${instance}.pem \    # {{kubelet certificate public}}
---client-key=${instance}-key.pem \    #{{kubelet private certificate}}
+kubectl config set-credentials system:node:${instance} \
+--client-certificate=${instance}.pem \
+--client-key=${instance}-key.pem \
 --embed-certs=true \
---kubeconfig=${instance}.kubeconfig   #{{name of kubeconfig}}
+--kubeconfig=${instance}.kubeconfig
 
 kubectl config set-context default \
 --cluster=mycluster \
