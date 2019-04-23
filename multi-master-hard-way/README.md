@@ -282,6 +282,11 @@ echo $CERT_HOSTNAME
 
 ` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes service-account-csr.json | cfssljson -bare service-account`
 
+#     Distribute Certificates to corresponding nodes 
+
+*   Worker Nodes - ca.pem , node*.pem
+*   Master Nodes - ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem
+
 
 
 
