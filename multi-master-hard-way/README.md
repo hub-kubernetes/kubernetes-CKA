@@ -115,6 +115,10 @@
 *   ca-key.pem  - root CA private key
 *   ca.csr  - root CA public key which was used to create the certificate 
 
+##  Generate client certificate for kubelet 
+
+> In order to understand Kubelet certificate, its important to understand the concept of node authorization in kubernetes. Node authorization in kubernetes enables kubelet (installed on nodes) to perform READ / WRITE and AUTH API operations. 
+
 
 
 
