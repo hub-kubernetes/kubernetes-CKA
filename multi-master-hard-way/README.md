@@ -287,6 +287,34 @@ echo $CERT_HOSTNAME
 *   Worker Nodes - ca.pem , node*.pem
 *   Master Nodes - ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem
 
+#     Organizing Cluster Access Using kubeconfig Files
+
+> **kubeconfig** file helps in organizing users, clusters and namespaces. Each component that connects to kube-apiserver uses its own kubeconfig file that helps in authenticating with apiserver. The kubernetes components that requires kubeconfig are - 
+
+* kube-controller-manager
+* kube-proxy
+* kube-scheduler
+* Admin user (not a core component)
+* kubelet
+
+> kubeconfig file can be created using the kubectl tool. `kubectl config` command can be used to generate the initial kubeconfig file for all components. Each component should contain all the below details - 
+
+* cluster details
+  * cluster context (name) - we will use mycluster
+  * Certificate Authority public certificate 
+  * API server address - https://LOADBALANCER_SERVER_IP:6443
+* Credentials
+  * username - **system:\<group\>\<username\>** or **admin**
+  * client certificate
+  * client private key 
+* Default context details 
+  * cluster name
+  * component username 
+
+# Generate kubeconfig file 
+
+##  
+
 
 
 
