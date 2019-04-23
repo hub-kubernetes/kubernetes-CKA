@@ -121,7 +121,34 @@
 
 > In order to understand Kubelet certificate, its important to understand the concept of **node authorization** in kubernetes. Node authorization in kubernetes enables kubelet (installed on nodes) to perform READ / WRITE and AUTH API operations. Since kubelet works on PodSpec, kubelet performs API operations to API server in order to maintain the state. 
 
-> 
+> Node Authorizer maintains a special group called as **system:nodes** and each kubelet must identify themselves as a part of this group. The identification takes place by generating a credential for kubelet within the system:nodes group. Each kubelet will have a username as **system:nodes:\<NodeName\>**. This group and user name format match the identity created for each kubelet as part of kubelet TLS bootstrapping
+
+> Each node will have kubelet installed. Each kubelet will have a separate client CSR which will be signed by the CA created in above step. The CN for each kubelet certificate will contain the UserName of each kubelet, i.e. **system:nodes:\<NodeName\>**
+
+> __**Installation Procedure for kubelet client certificates**__
+
+` cd certs` 
+
+> There are 3 files 
+
+*   node.cfg - This file contains worker node name and IP address in the format nodeName:IP. Edit this file accordingly.
+*   node-csr.json - The CSR configuration for node. 
+*   createnodecert.sh - Script which will be run to generate kubelet certificate. 
+
+` ./createnodecert.sh`
+
+> As we have 2 worker nodes - below is the output
+
+*   node1.pem - Public client certificate for node1 
+*   node1-key.pem - Private key for node1
+*   node1.csr - CSR for node1
+*   node2.pem - Public client certificate for node2
+*   node2-key.pem - Private key for node2
+*   node2.csr - CSR for node2
+
+> The createnodecert.sh script issues the command - 
+  *cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-controller-manager.json | cfssljson -bare kube-controller-manager* 
+
 
 
 
