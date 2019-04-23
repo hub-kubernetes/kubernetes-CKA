@@ -151,7 +151,27 @@
 *cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname=${WORKER_HOST},${WORKER_IP} -profile=kubernetes ${WORKER_HOST}-csr.json | cfssljson -bare ${WORKER_HOST}* 
 
 
-## Generate client certificate for controller manager
+# Generate client certificate for Kubernetes core components
+
+##  Understanding RBAC - Role Based Access Control
+
+> **RBAC** is the implementation of Identity and Access Management (Authorization) in Kubernetes. RBAC uses rbac.authorization.k8s.io API to allow admins to dynamically configure policies through API server. Administrator can use RBAC api to grant granular roles to different users or resources. A **Role** represents a set of permissions that are applied to different resources. RBAC defines 4 top-level types - 
+
+*   **Role**
+
+      A **Role** can be used to grant access to a resource within a single namespace
+      
+*   **ClusterRole**
+
+      A **ClusterRole** is similar to a **Role**, however, a ClusterRole extends across the cluster
+      
+*   **RoleBinding**
+
+      A **RoleBinding** grants permission defined in a **Role** to a **User** or a **Set of Users**
+          
+*   **ClusterRoleBinding**
+
+      A **ClusterRoleBinding** grants permission defined in a **ClusterRole** at cluster level across namespaces
 
 
 
