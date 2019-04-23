@@ -182,7 +182,7 @@
 *     Normal Users
 *     Kubernetes Managed Service Accounts 
 
-> A kubernetes managed subject has a special prefix - **system:**. Any username with the prefix **system:** is a kubernetes managed user and is maintained & created by api server or manually through api calls. It is your administrators responsibility to ensure that no external user should be prefixed with **system:**. This may lead to system instability or crashes. The **system:** prefix can be added to either a user , group or serviceaccount. Few examples of kubernetes managed subjects are - 
+> A kubernetes managed subject has a special prefix - **system:**. Any username with the prefix **system:** is a kubernetes managed user and is maintained & created by api server or manually through api calls. It is your administrators responsibility to ensure that no external user should be prefixed with **system:**. This may lead to system instability or crashes. The **system:** prefix can be added to either a user , group, serviceaccount, Role, ClusterRole. Few examples of kubernetes managed roles are - 
 
 *   system:kube-scheduler - Allows access to resources required by Scheduler 
 *   system:kube-controller-manager - Allows access to resources required by controller manager 
@@ -197,6 +197,76 @@
 > The file **kube-controller-manager-csr.json** is provided that contains config for controller-manager CSR. Note the **CN** field which is kept as **system:kube-controller-manager**. 
 
 ` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager`
+
+> The output will be as below - 
+
+*  kube-controller-manager.pem - controller-manager public certificate 
+*  kube-controller-manager-key.pem - controller-manager private key
+*  kube-controller-manager.csr - CSR for controller-manager
+
+##    Creating client certificate for kube-proxy
+
+> The file **kube-proxy-csr.json** is provided that contains config for controller-manager CSR. Note the **CN** field which is kept as **system:kube-proxy**.
+
+` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-proxy-csr.json | cfssljson -bare kube-proxy`
+
+> The output will be as below - 
+
+*  kube-proxy.pem - kube-proxy public certificate 
+*  kube-proxy-key.pem - kube-proxy private key
+*  kube-proxy.csr - CSR for kube-proxy
+
+##    Creating client certificate for kube-scheduler
+
+> The file **kube-scheduler-csr.json** is provided that contains config for controller-manager CSR. Note the **CN** field which is kept as **system:kube-scheduler**.
+
+` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-scheduler-csr.json | cfssljson -bare kube-scheduler`
+
+> The output will be as below - 
+
+*  kube-proxy.pem - kube-scheduler public certificate 
+*  kube-proxy-key.pem - kube-scheduler private key
+*  kube-proxy.csr - CSR for kube-scheduler
+
+##    Create Admin Client certificate 
+
+> There are a few exceptions to the kubernetes managed roles (default roles). Some default roles dont have **system:** prefix. These roles are user-facing roles, intended for admins, superusers, normal users, etc. Few examples of such roles are - 
+
+*  cluster-admin 
+*  admin
+
+> While creating the Admin client certificate, its important to note that the **CN** field must be kept as **admin**. 
+
+> The file **admin-csr.json** is provided which contains CSR config for Admin user. 
+
+` cfssl gencert  -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin  `
+
+> The output is as below - 
+
+*  admin.pem - Admin client certificate 
+*  admin-key.pem - Admin private key 
+*  admin.csr - Admin CSR 
+
+##    Generate server certificate for kube-apiserver 
+
+> The file **kubernetes-csr.json** is provided that contains the default configuration of the kube-apiserver Server certificate. Since multiple applications from multiple nodes will interact with the server certificate, its important to restrict access to the server certificate so that kube-apiserver will respond to the requests coming from authorized set of IP addresses. 
+
+` export CERT_HOSTNAME=10.32.0.1,IP_ADDRESSES_OF_MASTER,HOSTNAMES_OF_MASTERS,IP_ADDRESS_OF_LB,HOSTNAME_OF_LB,127.0.0.1,localhost,kubernetes.default`
+
+> Details of the certified Hostnames - 
+
+*  10.32.0.1 - Network IP address of Kubernetes Services (can be set as any range) 
+*  IP address & Hostname of master - Run `ip addr` to get ip addresses. Run `hostname` to get hostname
+*  IP address & address of LB - kubelet interacts with master via LB 
+*  127.0.0.1 & localhost - Loopback address & localhost required by kubernetes components 
+*  kubernetes.default - Used by kubernetes services for inter-namespace communication
+
+```
+echo $CERT_HOSTNAME
+10.32.0.1,10.128.15.221,10.128.15.222,master1,master2,10.128.15.226,lb,127.0.0.1,localhost,kubernetes.default
+```
+
+` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname=${CERT_HOSTNAME} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes`
 
 
 
