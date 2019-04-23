@@ -61,13 +61,14 @@
 ##  What certificates do we need to generate for Kubernetes ?
 
 *   Client certificates for the **kubelet** to authenticate to the **API server**
-*   Server certificate for the **API server endpoint**
+*   Server certificate for the **apiServer endpoint**
 *   Client certificates for **administrators** of the cluster to authenticate to the API server
-*   Client certificates for the **API server** to talk to the **kubelets (nodes)**
-*   Client certificate for the **API server** to talk to **etcd**
-*   Client certificate/kubeconfig for the **controller manager** to talk to the **API server**
-*   Client certificate/kubeconfig for the **scheduler** to talk to the **API server**
-*   **ETCD** client/server certificates for authentication between **each other** and **API server**
+*   Client certificates for the **apiServer** to talk to the **kubelets (nodes)**
+*   Client certificate for the **apiServer** to talk to **etcd**
+*   Client certificate/kubeconfig for the **controller manager** to talk to the **apiServer**
+*   Client certificate/kubeconfig for the **scheduler** to talk to the **apiServer**
+*   **ETCD** client/server certificates for authentication between **each other** and **apiServer**
+*   Client certificate for **kube-proxy** to talk to **apiServer**
 
 
 # Installing necessary software on Control node
