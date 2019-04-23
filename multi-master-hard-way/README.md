@@ -175,22 +175,22 @@
       
 ##    Understanding Subjects
 
->     A **RoleBinding** or **ClusterRoleBinding** will bind the permissions defined in a Role to ***Subjects***. A **Subject** is either a single user or a group of users or ServiceAccounts.  Usernames can be any custom string like "alice", "bob", "alice@example.com". 
+> A **RoleBinding** or **ClusterRoleBinding** will bind the permissions defined in a Role to ***Subjects***. A **Subject** is either a single user or a group of users or ServiceAccounts.  Usernames can be any custom string like "alice", "bob", "alice@example.com". 
 
->     Kubernetes clusters have two kinds of Users. 
+> Kubernetes clusters have two kinds of Users. 
 
 *     Normal Users
 *     Kubernetes Managed Service Accounts 
 
->     A kubernetes managed subject has a special prefix - **system:**. Any username with the prefix **system:** is a kubernetes managed user and is maintained & created by api server or manually through api calls. It is your administrators responsibility to ensure that no external user should be prefixed with **system:**. This may lead to system instability or crashes. The **system:** prefix can be added to either a user , group or serviceaccount. Few examples of kubernetes managed subjects are - 
+> A kubernetes managed subject has a special prefix - **system:**. Any username with the prefix **system:** is a kubernetes managed user and is maintained & created by api server or manually through api calls. It is your administrators responsibility to ensure that no external user should be prefixed with **system:**. This may lead to system instability or crashes. The **system:** prefix can be added to either a user , group or serviceaccount. Few examples of kubernetes managed subjects are - 
 
-*     system:kube-scheduler - Allows access to resources required by Scheduler 
-*     system:kube-controller-manager - Allows access to resources required by controller manager 
-*     system:kube-proxy - Allows access to the resources required by the kube-proxy 
+*   system:kube-scheduler - Allows access to resources required by Scheduler 
+*   system:kube-controller-manager - Allows access to resources required by controller manager 
+*   system:kube-proxy - Allows access to the resources required by the kube-proxy 
 
->     More information about RBAC is provided at - https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+> More information about RBAC is provided at - https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 
->     While creating client certificates for kubernetes core componenets or admin user, its important to note that that internal user for different components are created by Kubernetes itself. Its the certificate issuers responsibility to ensure that the **Common Name (CN)** field is set correctly as **system:kube-\<COMPONENT_NAME\>**. 
+> While creating client certificates for kubernetes core componenets or admin user, its important to note that that internal user for different components are created by Kubernetes itself. Its the certificate issuers responsibility to ensure that the **Common Name (CN)** field is set correctly as **system:kube-\<COMPONENT_NAME\>**. 
 
 ##    Creating client certificate for kube-scheduler 
 
