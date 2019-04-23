@@ -268,6 +268,22 @@ echo $CERT_HOSTNAME
 
 ` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -hostname=${CERT_HOSTNAME} -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes`
 
+> The output is as below - 
+
+*  kubernetes.pem - Api-Server Server certificate 
+*  kubernetes-key.pem - ApiServer private key 
+*  kubernetes.csr - CSR for ApiServer Server certificate 
+
+##    Generate Certificates for Service Account 
+
+> Kubernetes uses the Service Account certificates to sign tokens created for each new service account. This enables service accounts to interact with multiple resources. 
+
+> The file **service-account-csr.json** is provided. Please note that the **CN** is kept as **service-account** which matches yet another default kubernetes role. 
+
+` cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes service-account-csr.json | cfssljson -bare service-account`
+
+
+
 
 
 
