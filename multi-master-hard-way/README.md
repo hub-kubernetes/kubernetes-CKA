@@ -449,6 +449,41 @@ kubectl config use-context default --kubeconfig=admin.kubeconfig
 
 ```
 
+##  Distributing kubeconfig files to master and nodes 
+
+* worker nodes - nodeX.kubeconfig kube-proxy.kubeconfig
+* master nodes - admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig
+
+
+
+# Understanding encrypting data at rest in kubernetes
+
+> **What are kubernetes secrets??**
+
+  The secret object helps you store and manage sensitive information like credentials, tokens, private keys, etc. Secrets takes information as a **key-value pair**. The **key** is any user defined string and the **value** is the data that you want to encrypt. Kubernetes encodes your data to base64. 
+
+  While creating your **Pod**, you may pass the secret either as an **environment variable** or as a **volume**. This helps prevent exposure of sensitive information. 
+  
+  
+> **What is encryption at REST**
+
+Its important to note that secrets are **encoded as base64** and **NOT ENCRYPTED**. All kubernetes cluster data is stored in ETCD. Just like any other data, even the secret data is stored in etcd as **plaintext**. Secrets are independent objects, that can have a lifecycle independent of the pod to which it is associated to. Apart from secrets, there might be some other resource as a part of your Custom Resource Definition that you would want to be encrypted. If anyone gets access to your **ETCD** cluster, they can retrieve your sensitive information, as it is stored in plaintext. The feature of kubernetes which allows you to encrypt your etcd data is termed as encryption at Rest. 
+
+> **Encryptions providers supported by Kubernetes**
+
+Name | Encryption | Considerations 
+identity | None | No encryption provided 
+aescbc | AES-CBC with PKCS#7 padding | The recommended choice for encryption at rest
+secretbox | XSalsa20 and Poly1305 | A newer standard of encryption. 
+aesgcm | AES-GCM with random nonce | automated key rotation system is a must 
+KMS | Uses envelope encryption scheme | Recomended choice while using third party tools 
+
+
+> **Generating configuration for encryption at rest** 
+
+
+
+
 
 
 
