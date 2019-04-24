@@ -871,6 +871,170 @@ etcd-0               Healthy   {"health":"true"}
 
 ```
 
+##  Authorizing kubelets to master 
+
+> kube-apiserver will communicate with kubelet for retrieving metrics, logs and executing commands. In order to authorize access to kubelets, we will now create a RBAC **clusterrole** and a corresponding **clusterrolebinding** 
+
+> The files `kubelet-rbac-clusterrole.yaml` and `kubelet-rbac-clusterrolebinding.yaml` are provided in this repository. Copy these two files to any one of the master. 
+
+~~~
+scp kubelet-rbac-clusterrolebinding.yaml master1:~/
+scp kubelet-rbac-clusterrole.yaml master1:~/
+
+~~~
+
+> Execute kubectl apply to add the configuration from the files to kubernetes - 
+
+` kubectl apply -f kubelet-rbac-clusterrole.yaml --kubeconfig admin.kubeconfig`
+
+` kubectl apply -f kubelet-rbac-clusterrolebinding.yaml --kubeconfig admin.kubeconfig`
+
+> The output should be as below - 
+
+~~~
+kubectl apply -f kubelet-rbac-clusterrole.yaml --kubeconfig admin.kubeconfig
+clusterrole.rbac.authorization.k8s.io/system:kube-apiserver-to-kubelet created
+
+kubectl apply -f kubelet-rbac-clusterrolebinding.yaml --kubeconfig admin.kubeconfig
+clusterrolebinding.rbac.authorization.k8s.io/system:kube-apiserver created
+
+~~~
+
+> Few things to note - 
+
+* Name of the cluster role - system:kube-apiserver-to-kubelet
+* Resources that can be accessed - nodes/*subcomponents* 
+* Name of the binding - system:kube-apiserver
+* Subject - Username - kubernetes. Matches the CN of kube-apiserver 
+* ClusterRole and ClusterRolebinding will enable these permissions at cluster level 
+
+# Setting up Loadbalancer (nginx) 
+
+> The loadbalancer stands right in front of the masters. This acts as a point of entry to interact with the kube-apiservers. The kube-apiserver IP address was set as the LoadBalancer IP address while generating kubeconfig for kubelets. Even the kubectl will access the loadbalancer to interact with the master. 
+
+> The below steps will configure a nginx loadbalancer. These steps are to be performed on LoadBalancer node. 
+
+` apt-get install -y nginx`
+
+` systemctl enable nginx`
+
+` mkdir -p /etc/nginx/tcpconf.d` 
+
+> Create a file `/etc/nginx/tcpconf.d/kubernetes.conf` with the stream information. This file provides the loadbalancing details to kubernetes. 
+
+~~~
+stream {
+    upstream kubernetes {
+        server {{CONTROLLER0_IP}}:6443;
+        server {{CONTROLLER1_IP}}:6443;
+    }
+
+    server {
+        listen 6443;
+        listen 443;
+        proxy_pass kubernetes;
+    }
+}
+  
+~~~
+
+> Change the {{CONTROLLER0_IP}} and {{CONTROLLER1_IP}} to match the master1 and master2 IP address. The final file should look like the below - 
+
+~~~
+cat /etc/nginx/tcpconf.d/kubernetes.conf
+stream {
+    upstream kubernetes {
+        server 10.128.15.221:6443;
+        server 10.128.15.222:6443;
+    }
+
+    server {
+        listen 6443;
+        listen 443;
+        proxy_pass kubernetes;
+    }
+}
+
+~~~
+
+
+> Final step is to add the kubernetes.conf file to nginx.conf. Edit `/etc/nginx/nginx.conf` and add `include /etc/nginx/tcpconf.d/*; ` at the end of the file 
+
+~~~
+ tail -3 /etc/nginx/nginx.conf
+#}
+
+include /etc/nginx/tcpconf.d/*;
+
+~~~
+
+` nginx -s reload `
+
+> Test the configuration 
+
+` curl -k https://localhost:6443/version `
+
+~~~
+curl -k https://localhost:6443/version
+{
+  "major": "1",
+  "minor": "14",
+  "gitVersion": "v1.14.0",
+  "gitCommit": "641856db18352033a0d96dbc99153fa3b27298e5",
+  "gitTreeState": "clean",
+  "buildDate": "2019-03-25T15:45:25Z",
+  "goVersion": "go1.12.1",
+  "compiler": "gc",
+  "platform": "linux/amd64"
+
+~~~
+
+
+# Setting up worker nodes 
+
+> The below steps configures and installs kubernetes worker nodes. These steps must be performed on all worker nodes. 
+
+##  Install necessary OS dependencies and directories 
+
+> Each worker node requires installation of some packages before installing kubelet. Below are a list of packages that we will install-
+
+* conntrack - dependency required for kube-proxy
+* socat - Used to interface with containers while executing kubectl port-forward
+* ipset - used by IPVS for loadbalancing with client session based affinity
+* runsc - runsc runtime integrates with Docker and Kubernetes, making it simple to run sandboxed containers
+* crictl - CLI to inspect and debug CRI-compatible containers
+* Container Engine - docker in this demo. Docker also installs containerd 
+
+> Install conntrack socat ipset 
+
+` apt-get -y install socat conntrack ipset`
+
+> Install crictl 
+
+` VERSION="v1.14.0"`
+
+` wget https://github.com/kubernetes-sigs/cri-tools/releases/download/$VERSION/crictl-$VERSION-linux-amd64.tar.gz`
+
+` sudo tar zxvf crictl-$VERSION-linux-amd64.tar.gz -C /usr/local/bin`
+
+` rm -f crictl-$VERSION-linux-amd64.tar.gz`
+
+~~~
+ls -l /usr/local/bin/crictl
+-rwxr-xr-x 1 ubuntu ubuntu 28671158 Mar 25 03:19 /usr/local/bin/crictl
+~~~
+
+> Install runsc 
+
+` wget https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc`
+
+` wget https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc.sha512`
+
+` sha512sum -c runsc.sha512`
+
+` chmod a+x runsc`
+
+` sudo mv runsc /usr/local/bin`
 
 
 
