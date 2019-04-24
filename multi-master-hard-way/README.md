@@ -621,7 +621,7 @@ sudo ETCDCTL_API=3 etcdctl member list \
 
 > **Create necessary directories**
 
-` sudo mkdir -p /etc/kubernetes/config`
+` sudo mkdir -p /etc/kubernetes/config /var/lib/kubernetes/`
 
 ` mkdir installation && cd installation` 
 
@@ -647,12 +647,218 @@ ls -ltra /usr/local/bin/kube*
 ~~~
 
 
+## **Configure the kube-apiserver **
+
+> Below steps are installation and configuration steps for kube-apiserver. kube-apiserver will be installed on both the masters.
+
+* Copy certificates to /var/lib/kubernetes
+
+``` 
+scp  ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem  service-account-key.pem service-account.pem encryption-config.yaml master2:/var/lib/kubernetes
+
+scp  ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem  service-account-key.pem service-account.pem encryption-config.yaml master1:/var/lib/kubernetes
+
+```
+
+* Export the below variables on both the masters 
+
+` export INTERNAL_IP=INTERNAL_IP_ADDRESS_OF_THE_MASTER`
+
+` export CONTROLLER0_IP=IP_ADDRESS_OF_MASTER1`
+
+` export CONTROLLER1_IP=IP_ADDRESS_OF_MASTER1`
+
+> The values on both the masters should look like the below - 
+
+~~~
+
+master1 - 
+
+export INTERNAL_IP=10.128.15.221
+export CONTROLLER0_IP=10.128.15.221
+export CONTROLLER1_IP=10.128.15.222
+
+master2 - 
+
+export INTERNAL_IP=10.128.15.222
+export CONTROLLER0_IP=10.128.15.221
+export CONTROLLER1_IP=10.128.15.222
+~~~
+
+* Create the systemd unit file  -   Execute the below script 
+
+```
+cat << EOF | sudo tee /etc/systemd/system/kube-apiserver.service
+  [Unit]
+  Description=Kubernetes API Server
+  Documentation=https://github.com/kubernetes/kubernetes
+
+  [Service]
+  ExecStart=/usr/local/bin/kube-apiserver \\
+    --advertise-address=${INTERNAL_IP} \\
+    --allow-privileged=true \\
+    --apiserver-count=3 \\
+    --audit-log-maxage=30 \\
+    --audit-log-maxbackup=3 \\
+    --audit-log-maxsize=100 \\
+    --audit-log-path=/var/log/audit.log \\
+    --authorization-mode=Node,RBAC \\
+    --bind-address=0.0.0.0 \\
+    --client-ca-file=/var/lib/kubernetes/ca.pem \\
+    --enable-admission-plugins=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
+    --enable-swagger-ui=true \\
+    --etcd-cafile=/var/lib/kubernetes/ca.pem \\
+    --etcd-certfile=/var/lib/kubernetes/kubernetes.pem \\
+    --etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem \\
+    --etcd-servers=https://$CONTROLLER0_IP:2379,https://$CONTROLLER1_IP:2379 \\
+    --event-ttl=1h \\
+    --experimental-encryption-provider-config=/var/lib/kubernetes/encryption-config.yaml \\
+    --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \\
+    --kubelet-client-certificate=/var/lib/kubernetes/kubernetes.pem \\
+    --kubelet-client-key=/var/lib/kubernetes/kubernetes-key.pem \\
+    --kubelet-https=true \\
+    --runtime-config=api/all \\
+    --service-account-key-file=/var/lib/kubernetes/service-account.pem \\
+    --service-cluster-ip-range=10.32.0.0/24 \\
+    --service-node-port-range=30000-32767 \\
+    --tls-cert-file=/var/lib/kubernetes/kubernetes.pem \\
+    --tls-private-key-file=/var/lib/kubernetes/kubernetes-key.pem \\
+    --v=2 \\
+    --kubelet-preferred-address-types=InternalIP,InternalDNS,Hostname,ExternalIP,ExternalDNS
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+
+```
 
 
+##  Configure the kube-controller-manager 
+
+> The below steps will configure the kube-controller-manager. These steps will be executed on both the masters. 
+
+* Copy controller-manager kubeconfig to /var/lib/kubernetes
+
+~~~
+scp kube-controller-manager.kubeconfig master1:/var/lib/kubernetes/
+scp kube-controller-manager.kubeconfig master2:/var/lib/kubernetes/
+~~~
+
+* Generate the systemd unit file for kube-controller-manager
+
+```
+cat << EOF | sudo tee /etc/systemd/system/kube-controller-manager.service
+  [Unit]
+  Description=Kubernetes Controller Manager
+  Documentation=https://github.com/kubernetes/kubernetes
+
+  [Service]
+  ExecStart=/usr/local/bin/kube-controller-manager \\
+    --address=0.0.0.0 \\
+    --cluster-cidr=10.200.0.0/16 \\
+    --cluster-name=kubernetes \\
+    --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\
+    --cluster-signing-key-file=/var/lib/kubernetes/ca-key.pem \\
+    --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig \\
+    --allocate-node-cidrs=true \
+    --leader-elect=true \\
+    --root-ca-file=/var/lib/kubernetes/ca.pem \\
+    --service-account-private-key-file=/var/lib/kubernetes/service-account-key.pem \\
+    --service-cluster-ip-range=10.32.0.0/24 \\
+    --use-service-account-credentials=true \\
+    --v=2
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+```
+
+##  Configure the kube-scheduler 
+
+> The below steps will configure the kube-scheduler. These steps should be run on both the masters. Apart from the systemd unit file, kube-scheduler requires one more configuration file - **kube-scheduler.yaml**. This file is provided as a part of this repository
+
+* Copy kube-scheduler.yaml to all masters at /etc/kubernetes/config
+
+```
+scp kube-scheduler.yaml master1:/etc/kubernetes/config
+scp kube-scheduler.yaml master2:/etc/kubernetes/config
+```
+
+* Copy kube-scheduler kubeconfig file to both the masters 
+
+```
+scp kube-scheduler.kubeconfig master1:/var/lib/kubernetes/
+scp kube-scheduler.kubeconfig master2:/var/lib/kubernetes/
+
+```
+
+* Create systemd unit file for kube-scheduler 
+
+```
+
+cat << EOF | sudo tee /etc/systemd/system/kube-scheduler.service
+  [Unit]
+  Description=Kubernetes Scheduler
+  Documentation=https://github.com/kubernetes/kubernetes
+
+  [Service]
+  ExecStart=/usr/local/bin/kube-scheduler \\
+    --config=/etc/kubernetes/config/kube-scheduler.yaml \\
+    --v=2
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+```
+
+##  Start the master control plane 
+
+> The below steps will now bring up the master control plane, i.e. kube-apiserver, kube-controller-manager, kube-scheduler. These steps should be performed on both the masters 
+
+* Verify if everything is in place 
+
+~~~
+ls -ltr /var/lib/kubernetes /etc/kubernetes/config/ /etc/systemd/system/kube*
+-rw-r--r-- 1 root root 1755 Apr 24 09:40 /etc/systemd/system/kube-apiserver.service
+-rw-r--r-- 1 root root  835 Apr 24 09:45 /etc/systemd/system/kube-controller-manager.service
+-rw-r--r-- 1 root root  304 Apr 24 10:02 /etc/systemd/system/kube-scheduler.service
+
+/etc/kubernetes/config/:
+total 4
+-rw-r--r-- 1 root root 198 Apr 24 10:02 kube-scheduler.yaml
+
+/var/lib/kubernetes:
+total 44
+-rw-r--r-- 1 root root 1367 Apr 24 09:34 ca.pem
+-rw------- 1 root root 1679 Apr 24 09:34 ca-key.pem
+-rw------- 1 root root 1679 Apr 24 09:34 service-account-key.pem
+-rw-r--r-- 1 root root 1558 Apr 24 09:34 kubernetes.pem
+-rw------- 1 root root 1679 Apr 24 09:34 kubernetes-key.pem
+-rw-r--r-- 1 root root 1440 Apr 24 09:34 service-account.pem
+-rw------- 1 root root 6427 Apr 24 09:44 kube-controller-manager.kubeconfig
+-rw-r--r-- 1 root root  271 Apr 24 09:53 encryption-config.yaml
+-rw------- 1 root root 6377 Apr 24 10:05 kube-scheduler.kubeconfig
+
+~~~
 
 
+* Bring up all components on both the masters
 
+` sudo systemctl daemon-reload`
 
+` sudo systemctl enable kube-apiserver kube-controller-manager kube-scheduler`
+
+` sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler`
+
+` sudo systemctl status kube-apiserver kube-controller-manager kube-scheduler`
+
+` kubectl get componentstatuses --kubeconfig admin.kubeconfig` 
 
 
 
