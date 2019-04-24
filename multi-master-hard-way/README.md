@@ -1240,10 +1240,80 @@ node1   NotReady   <none>   2m33s   v1.14.0
 node2   NotReady   <none>   4m8s    v1.14.0
 ```
 
+# Configure kubectl on control node 
+
+> `kubectl config` command will used to generate kubeconfig on control node. The apiserver will use the loadbalancer IP address or loadbalancer DNS/Hostname if available. kubectl should be run only through the control node and only the control node should be exposed to users to interact with kubernetes cluster. 
+
+> The below commands will be run on control node.
+
+` cd certs ` 
+
+` kubectl config set-cluster mycluster  --certificate-authority=ca.pem --embed-certs=true  --server=https://lb:6443` 
+
+` kubectl config set-credentials admin --client-certificate=admin.pem --client-key=admin-key.pem`
+
+` kubectl config set-context mycluster --cluster=mycluster --user=admin`
+
+` kubectl config use-context mycluster`
+
+` kubectl get nodes`
+
+> Output should be as below - 
+
+~~~
+kubectl config set-cluster mycluster  --certificate-authority=ca.pem --embed-certs=true  --server=https://lb:6443
+Cluster "mycluster" set.
+
+kubectl config set-credentials admin --client-certificate=admin.pem --client-key=admin-key.pem
+User "admin" set.
+
+kubectl config set-context mycluster --cluster=mycluster --user=admin
+Context "mycluster" created.
+
+kubectl config use-context mycluster
+Switched to context "mycluster".
+
+kubectl get nodes
+NAME    STATUS     ROLES    AGE   VERSION
+node1   NotReady   <none>   11m   v1.14.0
+node2   NotReady   <none>   13m   v1.14.0
+
+~~~
 
 
+# Configure Calico CNI 
 
+##  About CNI and Calico 
 
+##  Install calico 
+
+` curl https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml -O`
+
+` Edit CALICO_IPV4POOL_CIDR and replace 192.168.0.0/16 with 10.200.0.0/16`
+
+` kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml`
+
+` kubectl apply -f calico.yaml ` 
+
+> The nodes should now change from NotReady to Ready status 
+
+~~~
+ kubectl get nodes
+NAME    STATUS   ROLES    AGE   VERSION
+node1   Ready    <none>   16m   v1.14.0
+node2   Ready    <none>   17m   v1.14.0
+
+~~~
+
+> The calico pods should be up and running 
+
+~~~
+kubectl get pods --all-namespaces
+NAMESPACE     NAME                READY   STATUS    RESTARTS   AGE
+kube-system   calico-node-nsmm5   2/2     Running   0          16s
+kube-system   calico-node-ztnvb   2/2     Running   0          16s
+
+~~~
 
 
 
