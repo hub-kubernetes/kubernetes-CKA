@@ -1005,9 +1005,11 @@ curl -k https://localhost:6443/version
 * crictl - CLI to inspect and debug CRI-compatible containers
 * Container Engine - docker in this demo. Docker also installs containerd 
 
+
 > Install conntrack socat ipset 
 
 ` apt-get -y install socat conntrack ipset`
+
 
 > Install crictl 
 
@@ -1024,6 +1026,7 @@ ls -l /usr/local/bin/crictl
 -rwxr-xr-x 1 ubuntu ubuntu 28671158 Mar 25 03:19 /usr/local/bin/crictl
 ~~~
 
+
 > Install runsc 
 
 ` wget https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc`
@@ -1035,6 +1038,46 @@ ls -l /usr/local/bin/crictl
 ` chmod a+x runsc`
 
 ` sudo mv runsc /usr/local/bin`
+
+~~~
+ ls -l /usr/local/bin/runsc
+-rwxr-xr-x 1 root root 19676482 Apr 24 08:19 /usr/local/bin/runsc
+~~~
+
+> Install Container Runtime - Docker
+
+```
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+```
+
+` curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -`
+
+` sudo apt-key fingerprint 0EBFCD88`
+
+```
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+```
+
+` sudo apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io`
+
+
+> Create required directories 
+
+` mkdir -p /var/lib/kubelet /var/lib/kube-proxy    /var/lib/kubernetes /var/run/kubernetes`
+
+
+##  Install worker components - kubelet & kube-proxy 
+
+
+
 
 
 
