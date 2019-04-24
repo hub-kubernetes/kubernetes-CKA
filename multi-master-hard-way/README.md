@@ -557,7 +557,7 @@ export INITIAL_CLUSTER=master1=https://10.128.15.221:2380,master2=https://10.128
 
 ~~~
 
-> Run the below script on both the masters- 
+> Run the below script on both the masters. The script will replace the necessary environment variables as you execute it and will create the systemd unit file at `/etc/systemd/system/etcd.service`
 
 ~~~
 
@@ -592,6 +592,26 @@ cat << EOF | sudo tee /etc/systemd/system/etcd.service
         WantedBy=multi-user.target
 EOF
 ~~~
+
+* **Start ETCD and verify the cluster**
+
+` sudo systemctl daemon-reload`
+
+` sudo systemctl enable etcd`
+
+` sudo systemctl start etcd`
+
+```
+Verification - 
+
+sudo ETCDCTL_API=3 etcdctl member list \
+          --endpoints=https://127.0.0.1:2379 \
+          --cacert=/etc/etcd/ca.pem \
+          --cert=/etc/etcd/kubernetes.pem \
+          --key=/etc/etcd/kubernetes-key.pem
+```
+
+
 
 
 
