@@ -609,7 +609,42 @@ sudo ETCDCTL_API=3 etcdctl member list \
           --cacert=/etc/etcd/ca.pem \
           --cert=/etc/etcd/kubernetes.pem \
           --key=/etc/etcd/kubernetes-key.pem
+          
+5086024aeabfa65a, started, master2, https://10.128.15.222:2380, https://10.128.15.222:2379
+616b39e9f29214ec, started, master1, https://10.128.15.221:2380, https://10.128.15.221:2379
+
 ```
+
+# Download and Install Kubernetes master components 
+
+> The below steps will install the master kubernetes components. These steps must be performed on **ALL Master nodes**
+
+> **Create necessary directories**
+
+` sudo mkdir -p /etc/kubernetes/config`
+
+` mkdir installation && cd installation` 
+
+> Visit - https://kubernetes.io/docs/setup/release/notes/#server-binaries for details on different architecture supported. You may also choose to select an older release. We will use the latest release (as per May 2019) - v1.14
+
+` wget https://dl.k8s.io/v1.14.0/kubernetes-server-linux-amd64.tar.gz`
+
+` gzip -d kubernetes-server-linux-amd64.tar.gz` 
+
+` tar xvf kubernetes-server-linux-amd64.tar` 
+
+` cd kubernetes/server/bin/`
+
+` cp kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/` 
+
+~~~
+ls -ltra /usr/local/bin/kube*
+-rwxr-xr-x 1 root root 167464288 Apr 24 08:35 /usr/local/bin/kube-apiserver
+-rwxr-xr-x 1 root root 115497504 Apr 24 08:35 /usr/local/bin/kube-controller-manager
+-rwxr-xr-x 1 root root  39254208 Apr 24 08:35 /usr/local/bin/kube-scheduler
+-rwxr-xr-x 1 root root  43103040 Apr 24 08:35 /usr/local/bin/kubectl
+
+~~~
 
 
 
