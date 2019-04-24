@@ -472,6 +472,7 @@ Its important to note that secrets are **encoded as base64** and **NOT ENCRYPTED
 > **Encryptions providers supported by Kubernetes**
 
 Name | Encryption | Considerations 
+--- | --- | ---
 identity | None | No encryption provided 
 aescbc | AES-CBC with PKCS#7 padding | The recommended choice for encryption at rest
 secretbox | XSalsa20 and Poly1305 | A newer standard of encryption. 
@@ -480,6 +481,25 @@ KMS | Uses envelope encryption scheme | Recomended choice while using third part
 
 
 > **Generating configuration for encryption at rest** 
+
+> Generate an encryption Key 
+~~~
+head -c 32 /dev/urandom| base64
+L0KeMGR9dmgRvfzqkELizUkcTiUpqb8lqisyzYcGtIw=
+~~~
+
+> The file encryption-config.yaml is provided that contains the first provider as **aescbc** and a secondary provider as **identity**. Kubernetes will go through the providers in order and will match aescbc as the primary encryption provider for its data at rest. 
+
+> Copy encryption-config.yaml to all master nodes 
+
+~~~
+scp encryption-config.yaml master1:~/
+scp encryption-config.yaml master2:~/
+
+~~~
+
+
+
 
 
 
