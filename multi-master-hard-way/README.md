@@ -531,7 +531,67 @@ total 12
 
 ~~~
 
+* **Generate ETCD Unit file**
 
+> Export the below environment variables on **ALL** master nodes 
+
+` export ETCD_NAME=HOSTNAME_OF_THE_NODE` 
+
+` export INTERNAL_IP=IP_ADDRESS_OF_NODE` 
+
+` export INITIAL_CLUSTER=MASTER1_NAME=https://MASTER1_PRIVATE_IP:2380,MASTER2_NAME=https://MASTER2_PRIVATE_IP` 
+
+> As an example - your variables should look like below on both the nodes - 
+
+~~~
+
+master1 - 
+export ETCD_NAME=master1
+export INTERNAL_IP=10.128.15.221
+export INITIAL_CLUSTER=master1=https://10.128.15.221:2380,master2=https://10.128.15.222:2380
+
+master2 -
+export ETCD_NAME=master2
+export INTERNAL_IP=10.128.15.222
+export INITIAL_CLUSTER=master1=https://10.128.15.221:2380,master2=https://10.128.15.222:2380
+
+~~~
+
+> Run the below script on both the masters- 
+
+~~~
+
+cat << EOF | sudo tee /etc/systemd/system/etcd.service
+        [Unit]
+        Description=etcd
+        Documentation=https://github.com/coreos
+
+        [Service]
+        ExecStart=/usr/local/bin/etcd \\
+          --name ${ETCD_NAME} \\
+          --cert-file=/etc/etcd/kubernetes.pem \\
+          --key-file=/etc/etcd/kubernetes-key.pem \\
+          --peer-cert-file=/etc/etcd/kubernetes.pem \\
+          --peer-key-file=/etc/etcd/kubernetes-key.pem \\
+          --trusted-ca-file=/etc/etcd/ca.pem \\
+          --peer-trusted-ca-file=/etc/etcd/ca.pem \\
+          --peer-client-cert-auth \\
+          --client-cert-auth \\
+          --initial-advertise-peer-urls https://${INTERNAL_IP}:2380 \\
+          --listen-peer-urls https://${INTERNAL_IP}:2380 \\
+          --listen-client-urls https://${INTERNAL_IP}:2379,https://127.0.0.1:2379 \\
+          --advertise-client-urls https://${INTERNAL_IP}:2379 \\
+          --initial-cluster-token etcd-cluster-0 \\
+          --initial-cluster ${INITIAL_CLUSTER} \\
+          --initial-cluster-state new \\
+          --data-dir=/var/lib/etcd
+        Restart=on-failure
+        RestartSec=5
+
+        [Install]
+        WantedBy=multi-user.target
+EOF
+~~~
 
 
 
