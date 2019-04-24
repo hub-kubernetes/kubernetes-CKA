@@ -509,12 +509,16 @@ scp encryption-config.yaml master2:~/
 
 * **Install and configure ETCD**
 
-~~~
-tar -xvf etcd-v3.3.5-linux-amd64.tar.gz
-sudo mv etcd-v3.3.5-linux-amd64/etcd* /usr/local/bin/
-mkdir -p /etc/etcd /var/lib/etcd
-cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/
 
+` tar -xvf etcd-v3.3.5-linux-amd64.tar.gz`
+
+` sudo mv etcd-v3.3.5-linux-amd64/etcd* /usr/local/bin/`
+
+` mkdir -p /etc/etcd /var/lib/etcd`
+
+` cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/ `
+
+~~~
 ls -ltra /usr/local/bin/etcd*
 -rwxr-xr-x 1 ubuntu ubuntu 16014624 May  9  2018 /usr/local/bin/etcdctl
 -rwxr-xr-x 1 ubuntu ubuntu 19254528 May  9  2018 /usr/local/bin/etcd
