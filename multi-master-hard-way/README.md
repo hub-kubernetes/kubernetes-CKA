@@ -705,7 +705,7 @@ cat << EOF | sudo tee /etc/systemd/system/kube-apiserver.service
     --authorization-mode=Node,RBAC \\
     --bind-address=0.0.0.0 \\
     --client-ca-file=/var/lib/kubernetes/ca.pem \\
-    --enable-admission-plugins=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
+    --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \\
     --enable-swagger-ui=true \\
     --etcd-cafile=/var/lib/kubernetes/ca.pem \\
     --etcd-certfile=/var/lib/kubernetes/kubernetes.pem \\
@@ -859,6 +859,17 @@ total 44
 ` sudo systemctl status kube-apiserver kube-controller-manager kube-scheduler`
 
 ` kubectl get componentstatuses --kubeconfig admin.kubeconfig` 
+
+```
+kubectl get componentstatuses --kubeconfig admin.kubeconfig
+
+NAME                 STATUS    MESSAGE             ERROR
+controller-manager   Healthy   ok
+scheduler            Healthy   ok
+etcd-1               Healthy   {"health":"true"}
+etcd-0               Healthy   {"health":"true"}
+
+```
 
 
 
