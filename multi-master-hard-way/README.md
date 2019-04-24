@@ -337,7 +337,7 @@ for instance in node1 node2; do
     --kubeconfig=${instance}.kubeconfig
 
   kubectl config set-context default \
-    --cluster=kubernetes-the-hard-way \
+    --cluster=mycluster \
     --user=system:node:${instance} \
     --kubeconfig=${instance}.kubeconfig
 
@@ -1074,7 +1074,171 @@ sudo add-apt-repository \
 ` mkdir -p /var/lib/kubelet /var/lib/kube-proxy    /var/lib/kubernetes /var/run/kubernetes`
 
 
+> Install CNI plugin archive 
+
+` wget https://github.com/containernetworking/plugins/releases/download/v0.7.4/cni-plugins-amd64-v0.7.4.tgz`
+
+` mkdir -p /etc/cni/net.d  /opt/cni/bin `
+
+` tar -xvf cni-plugins-amd64-v0.7.4.tgz -C /opt/cni/bin/`
+
+
 ##  Install worker components - kubelet & kube-proxy 
+
+> Please refer https://kubernetes.io/docs/setup/release/notes/#node-binaries for details regarding different releases and architectures of kubernetes. The below steps will install the node binaries. These steps should be performed on all nodes. 
+
+` wget https://dl.k8s.io/v1.14.0/kubernetes-node-linux-amd64.tar.gz`
+
+` gzip -d kubernetes-node-linux-amd64.tar.gz`
+
+` tar xvf kubernetes-node-linux-amd64.tar`
+
+` cd kubernetes/node/bin`
+
+` cp * /usr/local/bin/`
+
+~~~
+ls -ltra /usr/local/bin/kube*
+-rwxr-xr-x 1 root root  39574816 Apr 24 12:50 /usr/local/bin/kubeadm
+-rwxr-xr-x 1 root root  43103040 Apr 24 12:50 /usr/local/bin/kubectl
+-rwxr-xr-x 1 root root 127850432 Apr 24 12:50 /usr/local/bin/kubelet
+-rwxr-xr-x 1 root root  36681344 Apr 24 12:50 /usr/local/bin/kube-proxy
+~~~
+
+
+##  Configure kubelet 
+
+> The below steps will configure kubelet. These steps must be performed on all worker nodes 
+
+* Copy worker node certificates and kubeconfig file  
+
+` export HOSTNAME=$(hostname)`
+
+` mv ${HOSTNAME}-key.pem ${HOSTNAME}.pem /var/lib/kubelet/`
+
+` mv ${HOSTNAME}.kubeconfig /var/lib/kubelet/kubeconfig`
+
+` mv ca.pem /var/lib/kubernetes/`
+
+> kubelet requires an additional configuration file - kubelet-config.yaml which stores the Kubelet Configuration regarding certificates, cluster domain and authorization mode with api-server
+
+~~~
+cat << EOF | sudo tee /var/lib/kubelet/kubelet-config.yaml
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+  x509:
+    clientCAFile: "/var/lib/kubernetes/ca.pem"
+authorization:
+  mode: Webhook
+clusterDomain: "cluster.local"
+clusterDNS: 
+  - "10.32.0.10"
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/var/lib/kubelet/${HOSTNAME}.pem"
+tlsPrivateKeyFile: "/var/lib/kubelet/${HOSTNAME}-key.pem"
+EOF
+
+~~~
+
+> Create systemd unit file for kubelet 
+
+~~~
+cat << EOF | sudo tee /etc/systemd/system/kubelet.service
+  [Unit]
+  Description=Kubernetes Kubelet
+  Documentation=https://github.com/kubernetes/kubernetes
+  After=docker.service
+  Requires=docker.service
+
+  [Service]
+  ExecStart=/usr/local/bin/kubelet \\
+    --config=/var/lib/kubelet/kubelet-config.yaml \\
+    --image-pull-progress-deadline=2m \\
+    --kubeconfig=/var/lib/kubelet/kubeconfig \\
+    --network-plugin=cni \\
+    --register-node=true \\
+    --v=2 \\
+    --hostname-override=${HOSTNAME} \\
+    --allow-privileged=true
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+
+~~~
+
+
+~~~
+ls -ltra /etc/systemd/system/kubelet.service /var/lib/kubelet/kubelet-config.yaml
+-rw-r--r-- 1 root root 416 Apr 24 13:25 /var/lib/kubelet/kubelet-config.yaml
+-rw-r--r-- 1 root root 541 Apr 24 13:26 /etc/systemd/system/kubelet.service
+
+~~~
+
+
+##  Configure kube-proxy 
+
+> The below steps will install kube-proxy on worker nodes. These steps are to be performed on all worker nodes. Just like kubelet kube-proxy also needs a separate configuration file which provides details like certificates, networking mode, CIDR, etc. 
+
+> The file **kube-proxy-config.yaml** is provided as a part of the repository. Copy it over to all worker nodes at `/var/lib/kube-proxy/kube-proxy-config.yaml`
+
+` scp kube-proxy-config.yaml node1:/var/lib/kube-proxy/kube-proxy-config.yaml`
+
+` scp kube-proxy-config.yaml node2:/var/lib/kube-proxy/kube-proxy-config.yaml`
+
+> Copy kube-proxy kubeconfig file to all nodes 
+
+` scp kube-proxy.kubeconfig node1:/var/lib/kube-proxy/kubeconfig`
+
+` scp kube-proxy.kubeconfig node1:/var/lib/kube-proxy/kubeconfig`
+
+> Generate the systemd unit file for kube-proxy
+
+~~~
+cat << EOF | sudo tee /etc/systemd/system/kube-proxy.service
+  [Unit]
+  Description=Kubernetes Kube Proxy
+  Documentation=https://github.com/kubernetes/kubernetes
+
+  [Service]
+  ExecStart=/usr/local/bin/kube-proxy \\
+    --config=/var/lib/kube-proxy/kube-proxy-config.yaml
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+~~~
+
+
+##  Bring up kubelet and kube-proxy
+
+` systemctl daemon-reload`
+
+` systemctl enable kubelet kube-proxy`
+
+` systemctl start  kubelet kube-proxy`
+
+` systemctl status  kubelet kube-proxy`
+
+##  Verify kubelet bootstrap 
+
+> Log in to any master node and run the command - 
+
+```
+kubectl get nodes
+NAME    STATUS     ROLES    AGE     VERSION
+node1   NotReady   <none>   2m33s   v1.14.0
+node2   NotReady   <none>   4m8s    v1.14.0
+```
 
 
 
