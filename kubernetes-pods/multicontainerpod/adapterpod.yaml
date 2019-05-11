@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-adapter
+spec:
+  volumes:
+  - name: shared-logs 
+    emptyDir: {}
+
+  containers:
+
+  - name: app-container
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do date > /var/log/top.txt && top -n 1 -b >> /var/log/top.txt; sleep 5;done"]
+
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log
+
+  - name: adapter-container
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do (cat /var/log/top.txt | head -1 > /var/log/status.txt) && (cat /var/log/top.txt | head -2 | tail -1 | grep
+ -o -E '\\d+\\w' | head -1 >> /var/log/status.txt) && (cat /var/log/top.txt | head -3 | tail -1 | grep
+-o -E '\\d+%' | head -1 >> /var/log/status.txt); sleep 5; done"]
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log

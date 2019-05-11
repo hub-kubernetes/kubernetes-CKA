@@ -1,0 +1,10 @@
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: interpoddemo
+  labels:
+    app: phpapp
+spec:
+  containers:
+    - name: podcommunicationdemo
+      image: harshal0812/phpdemo

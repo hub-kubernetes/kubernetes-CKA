@@ -1,0 +1,29 @@
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: initcontainerdemo
+spec:
+  initContainers:
+    - name: init1
+      image: busybox
+      command: ["/bin/sh","-c"]
+      args: ["mkdir /nginxmount; echo This is coming from initcontainer > /nginxmount/index.html"]
+      
+      volumeMounts:
+        - name: nginxmount
+          mountPath: /nginxmount
+
+
+  containers:
+    - name: nginx 
+      image: nginx 
+      volumeMounts: 
+        - name: nginxmount
+          mountPath: /usr/share/nginx/html
+
+  volumes:
+    - name: nginxmount
+      hostPath:
+        path: /nginx
+        type: DirectoryOrCreate
+
