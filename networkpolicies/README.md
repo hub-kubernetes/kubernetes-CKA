@@ -8,3 +8,9 @@
 
 > As per version 1.14 of kubernetes - a complete reference of network policies are available at - https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#networkpolicy-v1-networking-k8s-io
 
+
+# Calico for Kubernetes 
+
+> Calico is a network plugin supported by kubernetes and it helps implement networking and networkpolicies in kubernetes cluster. Calico is supported by multiple cloud providers like AWS, GCP, Azure and comes with a pure IP networking fabric to provide high performance networking. Calico can also be used on private cloud by configuring BGP peering. More information on Calico and installation instructions are provided at calico's official website - https://docs.projectcalico.org/v2.0/getting-started/kubernetes/
+
+
