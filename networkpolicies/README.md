@@ -71,6 +71,86 @@ mysql          ClusterIP   10.105.107.237   <none>        3306/TCP   5m45s
 
 > The above command should give you the php file as output
 
+> Lets create a Network Policy to deny all ingress to all pods in the networkdemo namespace. By default all access to all pods should be denied as a good security practice. Once all pods are isolated, we can create selective network policy to only open required access between pods. 
+
+` kubectl create -f deny-ingress.yaml`
+
+> Verify if access is denied - 
+
+` kubectl run -n networkdemo demopod --rm -ti --image busybox /bin/sh`
+
+` wget -q --timeout=5 http://interpoddemo/index.php -O - ` 
+
+```
+# wget -q --timeout=5 http://interpoddemo/index.php -O -
+wget: download timed out
+```
+
+> We will now create a networkpolicy to allow ingress to only the webserver pod and not the mysqlpod - 
+
+` kubectl create -f allow-ingress-webserver.yaml`
+
+> Verify if access is granted - 
+
+` kubectl run -n networkdemo demopod --rm -ti --image busybox /bin/sh`
+
+` wget -q --timeout=5 http://interpoddemo/index.php -O - ` 
+
+
+> Lets access the webserver from the browser - 
+
+` kubectl edit svc interpoddemo   -n networkdemo` 
+
+> Change the `type: ClusterIP` to `type: NodePort`. Get the nodeport value and access the webserver through your browser using - http://IP:NODEPORT/index.php
+
+> Verify that currently you are not able to access the webserver from the internet. Lets delete the networkpolicies to verify access from the internet. 
+
+` kubectl delete -f allow-ingress-webserver.yaml `
+
+` kubectl delete -f deny-ingress.yaml`
+
+> Lets restrict only the db-pod to deny all ingress 
+
+` kubectl create -f deny-ingress-db.yaml ` 
+
+> Refresh your browser to verify that no db output is being fetched. 
+
+> We will now create an ingress rule for our database pod to only restrict ingress from webserver pod - 
+
+` kubectl create -f allow-ingress-db.yaml ` 
+
+> Refresh your browser to see if you are able to fetch the data again. 
+
+> Lets verify the network policy by deploying the same application - but with different labels : 
+
+` kubectl create -f app2.yaml ` 
+
+```
+kubectl get deploy -n networkdemo
+NAME            READY   UP-TO-DATE   AVAILABLE   AGE
+interpoddemo    3/3     3            3           61m
+interpoddemo2   3/3     3            3           9s
+mysql           1/1     1            1           69m
+```
+
+> Create a NodePort service for interpoddemo2
+
+` kubectl expose deploy interpoddemo2   --port=80 --type=NodePort -n networkdemo`
+
+```
+kubectl get svc -n networkdemo
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+interpoddemo    NodePort    10.102.212.191   <none>        80:30469/TCP   61m
+interpoddemo2   NodePort    10.110.27.192    <none>        80:30408/TCP   21s
+mysql           ClusterIP   10.105.107.237   <none>        3306/TCP       66m
+```
+
+> From your browser - open : http://IP:NODEPORT/index.php for interpoddemo2
+
+> Verify that interpoddemo2 service is not able to access mysql
+
+
+
 
 
 
