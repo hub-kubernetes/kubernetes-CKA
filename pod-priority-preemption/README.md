@@ -43,11 +43,15 @@ high-priority             1000000      false            48s
 
 * Create a pod with high priority 
 
+> Verify the current number of pods running in the overloaded deployment
+
 ```
 kubectl get deploy
 NAME    READY     UP-TO-DATE   AVAILABLE   AGE
 nginx   **214/300**   300          214         9m33s
 ```
+
+> Create the pod with high priority
 
 ` kubectl create -f high-priority-nginx.yaml `
 
