@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: networkdemo
+  labels:
+    app: db
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+
+    metadata:
+      name: mysql
+      labels:
+        app: mysql 
+    spec:
+      containers:
+        - image: mysql:5.7
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root"
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: hostvolume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: hostvolume
+          hostPath:
+            path: /dataa
+            type: DirectoryOrCreate

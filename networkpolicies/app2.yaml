@@ -1,0 +1,22 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: interpoddemo2
+  namespace: networkdemo
+  labels:
+    app: phpapp2
+spec:
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: phpapp2
+  template:
+    metadata:
+      name: phpapp2
+      labels:
+        app: phpapp2  
+
+    spec:
+      containers:
+        - name: podcommunicationdemo2
+          image: harshal0812/phpdemo
