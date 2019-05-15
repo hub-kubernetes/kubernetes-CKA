@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: security-context-pod
+spec:
+  securityContext:
+    runAsUser: 2500
+    fsGroup: 2000
+  volumes:
+  - name: security-context-vol
+    emptyDir: {}
+  containers:
+  - name: security-context-cont
+    image: supergiantkir/k8s-liveliness
+    volumeMounts:
+    - name: security-context-vol
+      mountPath: /data/test
+    securityContext:
+      allowPrivilegeEscalation: false
