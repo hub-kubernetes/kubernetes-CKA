@@ -162,6 +162,8 @@ kibana-bd6f49775-zmt4g   1/1     Running   0          11m
 
 * Refresh kibana dashboard to see if the logstash-* index patterns are getting created. 
 
+> In Discovery section - use the index pattern as logstash-* with timestamp as the filter to view all the logs. 
+
 
 
 
