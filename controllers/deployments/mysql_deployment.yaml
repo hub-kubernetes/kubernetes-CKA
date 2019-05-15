@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: mysqldeployment
+  labels:
+    app: mysql
+spec:
+  replicas: 3 
+  revisionHistoryLimit: 5 
+  selector:
+    matchLabels:
+      app: mysql
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1 
+      maxSurge: 2 
+  template:
+    metadata: 
+      name: mysql_pod
+      labels: 
+        app: mysql
+    spec:
+      containers:
+        - image: mysql:5.7
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          resources:
+            limits:
+              cpu: "1"
+            requests:
+              cpu: "0.5"
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          emptyDir: {}

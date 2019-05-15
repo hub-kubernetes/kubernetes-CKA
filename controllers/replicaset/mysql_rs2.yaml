@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata: 
+  name: mysqlrs
+  labels:
+    app: mysql
+spec: 
+  replicas: 3
+  selector: 
+    matchExpressions:
+      - {key: app, operator: In, values: [mysql_1, mysql_2]}
+  template:
+    metadata:
+      name: mysql
+      labels:
+        app: mysql_2 
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          emptyDir: {}

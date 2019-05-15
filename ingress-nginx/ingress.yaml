@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: app-ingress
+spec:
+  rules:
+  - host: kubernetesfederatedcluster.com
+    http:
+      paths: 
+      - path: /app1
+        backend:
+          serviceName: app1
+          servicePort: 80
+      - path: /app2
+        backend:
+          serviceName: app2
+          servicePort: 80
+      - path: /app3
+        backend:
+          serviceName: app3
+          servicePort: 80
+
+
+
