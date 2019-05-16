@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-bad
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+    livenessProbe:       #this block performs liveness probes
+      httpGet:
+        path: /healthz-notexist
+        port: 80
+    readinessProbe:      #this block performs readiness probes
+      httpGet:
+        path: /myreadiness
+        port: 80

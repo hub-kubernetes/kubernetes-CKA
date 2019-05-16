@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod 
+metadata:
+  name: pod-math
+spec:
+  containers:
+    - name: container-math
+      image: ubuntu
+      command: ["expr","10","+","24"]
