@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: web-cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: web-cache
+    spec:
+      containers:
+      - name: redis-server
+        image: redis:3.2-alpine
+      nodeSelector:
+        kubernetes.io/hostname: knode2
+
