@@ -56,7 +56,7 @@ cp ~/adobe-training/multi-master-hard-way/certs/ca.pem .
 
 ~~~
 openssl genrsa -out user.key 2048
-openssl req -new -key user.key -out user.csr -subj "/CN=user/O=developer"
+openssl req -new -key user.key -out user.csr -subj "/CN=developer/O=dev"
 openssl x509 -req -in user.csr  -CA ca.pem -CAkey ca-key.pem  -CAcreateserial -out user.crt -days 500
 ~~~
 
@@ -128,11 +128,78 @@ rolebinding.rbac.authorization.k8s.io/development-binding created
 
 ` cd .. ` 
 
-` cp -R developercerts ~developer/
+` cp -R developercerts ~developer/ `  
 
 ` chown -R developer:developer ~developer/developercerts/ `
 
 ` sudo -iu developer`
+
+> Get the API server URL as below and save this URL - 
+
+``` 
+grep -i server ~/.kube/config 
+server: https://loadbalancer:6443
+```
+
+> Now that we have copied over the certificates to the developer user - we will now use the developer user to run kubectl commands to create the developer kubeconfig files - 
+
+` kubectl config set-cluster usercluster --server=https://loadbalancer:6443`
+
+` kubectl config set-cluster usercluster --certificate-authority=ca.pem`
+
+` kubectl config set-credentials developer --client-key=user.key --client-certificate=user.crt`
+
+` kubectl config set-context userspace --cluster=usercluster --namespace=development --user=developer`
+
+` kubectl config use-context userspace`
+
+
+> Your configuration is now set. You have successfully authorized the user - developer to perform only few actions on the namespace development. Lets run some commands to test - 
+
+` kubectl run nginx --image=nginx` 
+
+```
+kubectl get pods 
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-7db9fccd9b-pl9np   1/1     Running   0          6s
+```
+
+> Verify the deployment - 
+
+``` 
+kubectl get deploy 
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+nginx   1/1     1            1           38s
+```
+
+> Delete the deployment 
+
+` kubectl delete deploy nginx `
+
+Observations - 
+
+> As per our understanding the DELETE action was not assigned to the user - developer. Running the above command should give us an error related to authorization 
+
+```
+kubectl delete deploy nginx 
+Error from server (Forbidden): deployments.extensions "nginx" is forbidden: User "developer" cannot delete resource "deployments" in API group "extensions" in the namespace "development"
+```
+
+> Run a few additional commands to prove that we have limited access - 
+
+```
+$ kubectl get namespaces
+Error from server (Forbidden): namespaces is forbidden: User "developer" cannot list resource "namespaces" in API group "" at the cluster scope
+
+$ kubectl get nodes 
+Error from server (Forbidden): nodes is forbidden: User "developer" cannot list resource "nodes" in API group "" at the cluster scope
+
+$ kubectl delete pods --all
+Error from server (Forbidden): pods "nginx-7db9fccd9b-pl9np" is forbidden: User "developer" cannot delete resource "pods" in API group "" in the namespace "development"
+
+```
+
+
 
 
 
