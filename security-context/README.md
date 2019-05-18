@@ -24,13 +24,119 @@
   
   - **ClusterRole** - Very similar to Roles, they are security profile for the entire cluster
   
-- **RoleBinding and ClusterRoleBinding
+- **RoleBinding and ClusterRoleBinding**
 
   - **RoleBinding** - RoleBinding binds a **subject** to a **Role**. It means, a subject is now assigned certian authorization policies. Since Roles are confined to a single namespace, the subjects have these authorization on the same namespace. Its important to understand that the serviceaccounts or users accessing the Roles must be present in the same namespace. 
   
   - **ClusterRoleBinding** - Similar to Rolebinding, ClusterRoleBinding binds a **Subject** to a **ClusterRole**. Since ClusterRole spawns across the cluster, the subject will have these policies on all namespaces across your cluster. 
   
-> Now that we have undestood the primary concepts regarding 
+> Now that we have undestood the primary concepts regarding RBAC, lets do a demo on creating a kubernetes user with mimimal authorization - 
+
+> Lets start off by creating a user `developer` on our linux machine from where kubectl is run - 
+
+` useradd -m developer` 
+
+` sudo -iu developer`
+
+```
+pwd
+/home/developer
+```
+
+> Just like we created Certificates for Admin user - we will now create a certificate for developer user. We need the CA certificate (ca.crt / ca.pem) and the CA private key (ca.key / ca-key.pem)
+
+```
+mkdir developercerts
+cd developercerts
+cp ~/adobe-training/multi-master-hard-way/certs/ca-key.pem .
+cp ~/adobe-training/multi-master-hard-way/certs/ca.pem .
+```
+
+> We will now create a CSR for the user - developer and use the CA certificates to sign them. In order to create these certificates we need to set the CN as developer while creating the CSR. This tells kubernetes that any end user using these certificates will have the same access as the developer user. 
+
+~~~
+openssl genrsa -out user.key 2048
+openssl req -new -key user.key -out user.csr -subj "/CN=user/O=developer"
+openssl x509 -req -in user.csr  -CA ca.pem -CAkey ca-key.pem  -CAcreateserial -out user.crt -days 500
+~~~
+
+> Below are the files generated - 
+
+~~~
+-rw------- 1 root root 1675 May 18 11:05 user.key
+-rw-r--r-- 1 root root  911 May 18 11:08 user.csr
+-rw-r--r-- 1 root root 1111 May 18 11:09 user.crt
+-rw-r--r-- 1 root root   17 May 18 11:09 ca.srl
+~~~
+
+
+> Create RBAC policies for the developer user - We will create a namespace called `development` and provide GET, LIST, WATCH, CREATE, UPDATE actions to ONLY Deployments, Replicasets and Pods on this namespace. Below is the definition of the ROLE and the corresponding ROLEBINDING 
+
+~~~
+role.yaml
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  namespace: development
+  name: developer-role
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: ["deployments", "replicasets", "pods"]
+  verbs: ["get", "list", "watch", "create", "update"]
+
+  
+rolebinding.yaml
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: development-binding
+  namespace: development
+subjects:
+- kind: User
+  name: developer
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: developer-role
+  apiGroup: ""
+
+~~~
+
+Observations - 
+
+> In the role - the namespace is specified as development and the rules specifies the policies that will be granted by this role. 
+
+> In the RoleBinding - the namespace is specified as development, the subject is specified as developer (same value as that from CN) and the binding is between the developer user and the Role created above - developer-role. We will now create these policies - 
+
+` kubectl create ns development`
+
+` kubectl create -f role.yaml -f rolebinding.yaml` 
+
+~~~
+kubectl create -f role.yaml -f rolebinding.yaml
+role.rbac.authorization.k8s.io/developer-role created
+rolebinding.rbac.authorization.k8s.io/development-binding created
+~~~
+
+> We will now distribute the certificates to the end user - i.e. the developer user created on our system. We **SHOULD NOT** provide the CA private key to any user. 
+
+` cd developercerts`
+
+` rm ca-key.pem `
+
+` cd .. ` 
+
+` cp -R developercerts ~developer/
+
+` chown -R developer:developer ~developer/developercerts/ `
+
+` sudo -iu developer`
+
+
+
+
   
 
 
