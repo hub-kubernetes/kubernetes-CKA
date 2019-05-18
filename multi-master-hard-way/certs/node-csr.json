@@ -1,5 +1,5 @@
 {
-  "CN": "system:node:${WORKER_HOST}",
+  "CN": "system:node:WORKER_HOST",
   "key": {
     "algo": "rsa",
     "size": 2048
