@@ -15,4 +15,7 @@ spec:
       containers:
       - name: redis-server
         image: redis:3.2-alpine
+      nodeSelector:
+        kubernetes.io/hostname: knode1
+
 
