@@ -154,7 +154,36 @@ nginx-affinity-node   1/1     Running   0          6s    192.168.2.204   knode2 
 
 >	The pod is now created on knode2. Knode2 satisfies the criteria of the hard rule - zone=us-west-1 and the soft rule - drbackup=europe. 
 
+>	Lets now see what happens when we delete the label drbackup=europe from knode2 and create the same pod - 
 
+>	Lets delete the pod first - 
+
+` kubectl delete -f nginx-nodeaffinity.yaml `
+
+>	We will now delete the label - drbackup=europe 
+
+`	kubectl label node knode2 drbackup-`
+
+>	Recreate the pod - 
+
+`	kubectl create -f nginx-nodeaffinity.yaml`
+
+
+Observations - 
+
+>	Since the soft rule cannot be matched - multiple retries of the pod creation will create the pod on either of the node. 
+
+```
+kubectl get pods -o wide
+NAME                  READY   STATUS    RESTARTS   AGE   IP             NODE     NOMINATED NODE   READINESS GATES
+nginx-affinity-node   1/1     Running   0          3s    192.168.1.11   knode1   <none>           <none>
+
+
+kubectl get pods -o wide
+NAME                  READY   STATUS    RESTARTS   AGE   IP            NODE     NOMINATED NODE   READINESS GATES
+nginx-affinity-node   1/1     Running   0          8s    192.168.2.8   knode2   <none>           <none>
+
+```
 
 *	PodAffinity/Anti-Affinity
 
