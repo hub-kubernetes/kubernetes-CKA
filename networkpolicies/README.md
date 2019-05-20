@@ -149,6 +149,54 @@ mysql           ClusterIP   10.105.107.237   <none>        3306/TCP       66m
 
 > Verify that interpoddemo2 service is not able to access mysql
 
+> We have now seen how to deny ingress to a pod. Lets now see how to handle egress on the cluster. We will start off by creating a denyALL egress rule - 
+
+` kubectl create -f deny-all-egress.yaml`
+
+> Verify all egress is denied - We will now run our access pod to perform a nslookup or ping to nginx pod - 
+
+` kubectl run --namespace=networkdemo access --rm -ti --image busybox /bin/sh`
+
+` nslookup nginx`
+
+Observations - 
+
+```
+/ # nslookup nginx 
+;; connection timed out; no servers could be reached
+
+```
+
+
+> We will now allow all DNS egress traffic to our pod - 
+
+` kubectl create -f egress-allow-dns.yaml `
+
+> The above file allows all traffic from any pod in networkdemo namespace to any pod in kube-system namespace. In order to achieve this egress, we are using a selector -  name=kube-system. So its important to label the kube-system namespace with name=kube-system. 
+
+` kubectl label namespace kube-system name=kube-system`
+
+
+> Verify if egress is achieved - 
+
+` kubectl run --namespace=networkdemo access --rm -ti --image busybox /bin/sh`
+
+` nslookup nginx`
+
+Observations - 
+
+> Since coredns lies in kube-system namespace - nslookup command will now execute from networkdemo namespace and try to access coredns on kube-system. Since we have applied egress policies to kube-system, we should be able to get the nslookup output 
+
+```
+nslookup nginx 
+Server:         10.96.0.10
+Address:        10.96.0.10:53
+
+nslookup google.com
+Server:         10.96.0.10
+Address:        10.96.0.10:53
+```
+
 
 
 
