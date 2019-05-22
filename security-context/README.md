@@ -147,7 +147,7 @@ server: https://10.142.15.209:6443
 
 ` cd developercerts`
 
-` kubectl config set-cluster usercluster --server=https://loadbalancer:6443`
+` kubectl config set-cluster usercluster --server=https://10.142.15.209:6443`
 
 ` kubectl config set-cluster usercluster --certificate-authority=ca.pem`
 
