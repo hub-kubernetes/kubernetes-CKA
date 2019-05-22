@@ -48,8 +48,8 @@ pwd
 ```
 mkdir developercerts
 cd developercerts
-cp ~/adobe-training/multi-master-hard-way/certs/ca-key.pem .
-cp ~/adobe-training/multi-master-hard-way/certs/ca.pem .
+cp /etc/kubernetes/pki/ca.key .
+cp /etc/kubernetes/pki/ca.crt .
 ```
 
 > We will now create a CSR for the user - developer and use the CA certificates to sign them. In order to create these certificates we need to set the CN as developer while creating the CSR. This tells kubernetes that any end user using these certificates will have the same access as the developer user. 
@@ -57,7 +57,7 @@ cp ~/adobe-training/multi-master-hard-way/certs/ca.pem .
 ~~~
 openssl genrsa -out user.key 2048
 openssl req -new -key user.key -out user.csr -subj "/CN=developer/O=dev"
-openssl x509 -req -in user.csr  -CA ca.pem -CAkey ca-key.pem  -CAcreateserial -out user.crt -days 500
+openssl x509 -req -in user.csr  -CA ca.crt -CAkey ca.key  -CAcreateserial -out user.crt -days 500
 ~~~
 
 > Below are the files generated - 
@@ -104,6 +104,7 @@ roleRef:
 
 ~~~
 
+
 Observations - 
 
 > In the role - the namespace is specified as development and the rules specifies the policies that will be granted by this role. 
@@ -124,7 +125,7 @@ rolebinding.rbac.authorization.k8s.io/development-binding created
 
 ` cd developercerts`
 
-` rm ca-key.pem `
+` rm ca.key `
 
 ` cd .. ` 
 
@@ -132,16 +133,19 @@ rolebinding.rbac.authorization.k8s.io/development-binding created
 
 ` chown -R developer:developer ~developer/developercerts/ `
 
-` sudo -iu developer`
 
 > Get the API server URL as below and save this URL - 
 
 ``` 
 grep -i server ~/.kube/config 
-server: https://loadbalancer:6443
+server: https://10.142.15.209:6443
 ```
 
+` sudo -iu developer`
+
 > Now that we have copied over the certificates to the developer user - we will now use the developer user to run kubectl commands to create the developer kubeconfig files - 
+
+` cd developercerts`
 
 ` kubectl config set-cluster usercluster --server=https://loadbalancer:6443`
 
