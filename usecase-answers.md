@@ -275,7 +275,7 @@ nginxdeploy-78b68c78c4-td8p5   1/1     Running   0          2m13s
 
 * Get events from from pods 
 
-```
+
 kubectl get events --sort-by=.metadata.name
 
 # Alternatively you can also execute describe command.  
