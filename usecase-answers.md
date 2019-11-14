@@ -632,7 +632,7 @@ Label the nginx pod first for selection -
 kubectl label pod nginx-6db489d4b7-l4p8c app=webserver
 ```
 
-Create network policy to deny ingress to all pods with label pod:webserver
+Create network policy to deny ingress to all pods with label app:webserver
 
 ```
 vi networkpolicy.yaml
@@ -670,11 +670,59 @@ Spec:
   Policy Types: Ingress
 ```
 
+* Rerun the curl command from busybox1, it should fail.
+
+```
+kubectl attach pod busybox1-684864579c-6mcnj -i -t
+
+[ root@busybox1-684864579c-6mcnj:/ ]$ curl 172.17.0.5
+curl: (7) Failed to connect to 192.168.171.68 port 80: Connection timed out
+```
+
+* Create a NetworkPolicy that blocks all ingress traffic to the nginx pod with the exception of all pods labelled with tier:jumppod
+
+```
+vi allowingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-busybox
+spec:
+  podSelector:
+    matchLabels:
+      app: webserver
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            tier: jumppod
+
+
+kubectl create -f allowingress.yaml
+```
+
 Verify connectivity from busybox
 
 ```
+kubectl attach busybox1-684864579c-6mcnj -i -t 
+
+[ root@busybox1-684864579c-6mcnj:/ ]$ curl 192.168.171.68   
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
 
 ```
+
+### Lab 4 - Enable Pod Security Policy
+
+Refer in-lab demo on PSP 
+
+### Lab 5 - Create policies
+
+Refer in-lab demo on PSP
 
 
 
