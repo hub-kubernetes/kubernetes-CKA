@@ -724,13 +724,82 @@ Refer in-lab demo on PSP
 
 Refer in-lab demo on PSP
 
+### Lab 6 - Security Context
+
+```
+vi securitycontext.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: security-context-demo
+spec:
+  securityContext:
+    runAsUser: 600
+  containers:
+  - name: sec-ctx-demo
+    image: busybox
+    command: [ "sh", "-c", "sleep 1h" ]
+
+kubectl create -f securitycontext.yaml
+
+kubectl exec -it security-context-demo sh
+
+/ $ ps -ef
+PID   USER     TIME  COMMAND
+    1 600       0:00 sleep 1h
+
+```
+
+### Lab 7 - Secure persistent key value store
+
+Refer SP videos 
+
+---
+
+## CKA Lab Part 6 - Storage
+
+Refer to the below demo for complete example -
+
+https://github.com/hub-kubernetes/kubernetes-CKA/tree/master/mariadb-statefulset
+
+---
+
+## CKA Lab Part 9 - Networking
 
 
+### Lab 1 - Create a ClusterIP
+
+* Create a deployment consisting of three nginx containers.
+
+```
+kubectl run nginx --image=nginx --replicas=3
+```
+
+* Create a service of type “Cluster IP” which is exposed on port 8080 that facilitates connections to the aforementioned deployment, which listens on port 80
+
+```
+kubectl expose deploy nginx --port=8080 --target-port=80 --type=ClusterIP
+```
+
+* Test connectivity
+
+```
+kubectl get svc
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+nginx        ClusterIP   10.100.93.142   <none>        8080/TCP   4s
+
+root@master:~# curl 10.100.93.142:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
 
 
+```
 
-
-
+### 
 
 
 
