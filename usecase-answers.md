@@ -331,6 +331,164 @@ nginxdeploy-78b68c78c4-td8p5   1/1     Running   0          10m   app=frontend,p
 kubectl logs -l app=frontend
 
 ```
+---
+
+## CKA Lab Part 3 - Application Lifecycle Management
+
+### Lab 1 - Perform rolling updates on a deployment
+
+Refer in-class demo
+
+### Lab 2 - Change the update strategy for a deployment
+
+Refer in-class demo
+
+### Lab 3 - Perform a rollback on a deployment
+
+Refer in-class demo
+
+### Lab 4 - Scale a deployment
+
+```
+kubectl run nginx --image=nginx
+
+kubectl scale deployment nginx --replicas=6
+```
+
+### Lab 5 - Create and run a Job
+
+```
+vi job.yaml 
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: pi
+        image: perl
+        command: ["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  backoffLimit: 4
+
+
+kubectl create -f job.yaml
+```
+
+### Lab 6 - Create and use a Config Map
+
+```
+echo "database_host" > /tmp/db_h.txt
+echo "database_port" > /tmp/db_h.txt
+kubectl create configmap db_config --from-file=DATABASE_HOST=/tmp/db_h.txt --from-file=DATABASE_PORT=/tmp/db_p.txt
+```
+
+### Lab 7 - Create and use Secrets
+
+```
+kubectl create secret generic db-credentials --from-literal=db-username=dbuser --from-literal=db-password=dbpassword
+```
+
+### Lab 8 - Configure a pod with specific environment variables
+
+Refer in-class demo 
+
+---
+
+## CKA Lab Part 4 - Cluster
+
+### Lab 1 - Cluster Upgrades
+
+* Upgrade the kubeadm binary
+
+```
+apt-get upgrade kubeadm
+```
+
+* Assess the upgrade path that kubeadm has provided
+
+```
+kubeadm upgrade plan
+```
+
+* Note down the command to execute the upgrade
+
+```
+kubeadm upgrade apply v1.XX.X
+```
+
+* Upgrade Kubelet on all the nodes
+
+```
+apt-get upgrade kubelet 
+```
+
+### Cluster Upgrades - OS Upgrades
+
+* Gracefully remove a node from active service
+
+```
+kubectl drain node worker1
+```
+
+* Gracefully return a node into active service
+
+```
+kubectl uncordon node worker1
+```
+
+### Back up etcd
+
+
+```
+sudo docker run --rm -v $(pwd)/backup:/backup \
+    --network host \
+    -v /etc/kubernetes/pki/etcd:/etc/kubernetes/pki/etcd \
+    --env ETCDCTL_API=3 \
+    k8s.gcr.io/etcd-amd64:3.2.18 \
+    etcdctl --endpoints=https://127.0.0.1:2379 \
+    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+    --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+    --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+    snapshot save /backup/etcd-snapshot-latest.db
+
+```
+
+### Lab 4 - Back up Kubernetes certificates
+
+```
+sudo mkdir -p /backup
+
+sudo cp -r /etc/kubernetes/pki backup/
+
+```
+
+---
+
+## CKA Lab Part 5 - Security
+
+### Lab 1 - RBAC within a namespace
+
+* Create the namespace “rbac-test”
+
+kubectl create ns rbac-test
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
