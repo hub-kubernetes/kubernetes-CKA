@@ -474,8 +474,69 @@ sudo cp -r /etc/kubernetes/pki backup/
 
 * Create the namespace “rbac-test”
 
+```
 kubectl create ns rbac-test
+```
 
+* Create the service account “rbac-test-sa” for the “rbac-test” namespace
+
+```
+kubectl create serviceaccount rbac-test-sa -n rbac-test
+```
+
+* Create a role “rbac-test-role” that grants the following pod level resources:
+
+```
+vi role.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: rbac-test
+  name: rbac-test-role
+rules:
+- apiGroups: [""] 
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+
+kubectl create -f role.yaml
+
+kubectl get role -n rbac-test
+NAME             AGE
+rbac-test-role   10s
+```
+
+* Bind the “rbac-test-sa” service account to the “rbac-test-role” role
+
+```
+vi rolebinding.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rbac-test-rolebinding
+  namespace: rbac-test
+
+roleRef:
+  kind: Role
+  name: rbac-test-role
+  apiGroup: rbac.authorization.k8s.io
+
+subjects:
+- kind: ServiceAccount
+  namespace: rbac-test
+  name: rbac-test-sa
+
+kubectl create -f rolebinding.yaml
+```
+
+* Test RBAC is working by trying to do something the service account is not authorised to do
+
+Refer in-class demo on user grants using rbac 
+
+### Lab 2 - RBAC within a cluster
+
+Refer in-class demo for rbac
 
 
 
