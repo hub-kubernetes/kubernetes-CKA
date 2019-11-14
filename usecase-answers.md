@@ -539,7 +539,142 @@ Refer in-class demo on user grants using rbac
 Refer in-class demo for rbac
 
 
+### Lab 3 - Network security policy
 
+* Create a nginx pod that listens on port 80, note the IP assigned to it.
+
+```
+kubectl run nginx --image=nginx 
+
+kubectl get pods -o wide 
+NAME                        READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+nginx-6db489d4b7-l4p8c      1/1     Running   0          4s    172.17.0.5   minikube   <none>           <none>
+
+```
+
+* Create two pods that can use “curl” named busybox1 and busybox2
+
+```
+kubectl run busybox1 --image=radial/busyboxplus:curl -i --tty
+```
+
+This generates the below output - 
+```
+kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
+
+If you don't see a command prompt, try pressing enter.
+
+```
+
+Execute the curl command 
+
+```
+
+[ root@busybox1-684864579c-m78s5:/ ]$ curl 172.17.0.5   
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+```
+
+Exit the pod 
+
+```
+[ root@busybox1-684864579c-m78s5:/ ]$ exit
+
+```
+
+Repeat the exact same steps for another container - busybox2
+
+```
+kubectl run busybox2 --image=radial/busyboxplus:curl -i --tty
+```
+
+* Label them with tier:jumppod
+
+```
+NAME                        READY   STATUS    RESTARTS   AGE     LABELS
+busybox1-684864579c-m78s5   1/1     Running   1          3m59s   pod-template-hash=684864579c,run=busybox1
+busybox2-6c6b47cd9c-jsz44   1/1     Running   1          52s     pod-template-hash=6c6b47cd9c,run=busybox2
+nginx-6db489d4b7-l4p8c      1/1     Running   0          8m1s    pod-template-hash=6db489d4b7,run=nginx
+
+kubectl label pod busybox1-684864579c-m78s5 tier=jumppod
+kubectl label pod busybox2-6c6b47cd9c-jsz44 tier=jumppod
+
+kubectl get pods --show-labels
+NAME                        READY   STATUS    RESTARTS   AGE     LABELS
+busybox1-684864579c-m78s5   1/1     Running   1          4m44s   pod-template-hash=684864579c,run=busybox1,tier=jumppod
+busybox2-6c6b47cd9c-jsz44   1/1     Running   1          97s     pod-template-hash=6c6b47cd9c,run=busybox2,tier=jumppod
+nginx-6db489d4b7-l4p8c      1/1     Running   0          8m46s   pod-template-hash=6db489d4b7,run=nginx
+
+```
+
+* Take a interactive shell to busybox1 and run curl 
+
+```
+kubectl attach pod busybox1-684864579c-m78s5 -i -t
+
+[ root@busybox1-684864579c-m78s5:/ ]$ curl 172.17.0.5   
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+
+[ root@busybox1-684864579c-m78s5:/ ]$ exit
+```
+
+* Create a NetworkPolicy rule that blocks all ingress traffic to the nginx pod
+
+Label the nginx pod first for selection - 
+
+```
+kubectl label pod nginx-6db489d4b7-l4p8c app=webserver
+```
+
+Create network policy to deny ingress to all pods with label pod:webserver
+
+```
+vi networkpolicy.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nginx-deny-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: webserver
+  policyTypes:
+  - Ingress
+
+kubectl create -f networkpolicy.yaml
+networkpolicy.networking.k8s.io/nginx-deny-ingress created
+```
+
+Describe networkpolicy 
+
+```
+kubectl describe networkpolicy nginx-deny-ingress
+Name:         nginx-deny-ingress
+Namespace:    default
+Created on:   2019-11-14 06:23:48 +0000 UTC
+Labels:       <none>
+Annotations:  <none>
+Spec:
+  PodSelector:     app=webserver
+  Allowing ingress traffic:
+    <none> (Selected pods are isolated for ingress connectivity)
+  Allowing egress traffic:
+    <none> (Selected pods are isolated for egress connectivity)
+  Policy Types: Ingress
+```
+
+Verify connectivity from busybox
+
+```
+
+```
 
 
 
