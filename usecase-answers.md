@@ -799,7 +799,67 @@ root@master:~# curl 10.100.93.142:8080
 
 ```
 
-### 
+### Lab 2 - Create a LoadBalancer
+
+Repeat the deployment steps from above example and change the name if required. Ensure that you are using EKS or GKE or AKS for this demo
+
+```
+kubectl expose deploy nginx --port=8080 --target-port=80 --type=LoadBalancer
+```
+
+### Lab 3 - Create a NodePort
+
+* Create a deployment consisting of three nginx containers.
+
+```
+kubectl run webserver --image=nginx --replicas=3
+```
+
+* Create a service of type “NodePort” which is exposed on port 30010 that facilitates connections to the aforementioned deployment, which listens on port 80.
+
+```
+vi service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver-service
+
+spec:
+  ports:
+    - name: webserver
+      port: 80
+      targetPort: 80
+      nodePort: 30010
+  selector:
+    run: webserver
+  type: NodePort
+
+kubectl create -f service.yaml
+```
+
+* Verify 
+
+```
+kubectl get svc 
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+webserver-service   NodePort    10.104.230.19   <none>        80:30010/TCP   4s
+
+curl localhost:30010
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+
+```
+
+### Lab 4 - Create a Ingress Resource
+
+Refer to in-class demo on ingress controller. 
+
+---
 
 
 
